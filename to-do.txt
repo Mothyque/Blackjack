@@ -1,0 +1,5 @@
+- change bet / quick playagain
+- ui changes (colorat maini, spatiere intre ture)
+- split logic
+- update readme
+*- repository + login
