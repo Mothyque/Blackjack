@@ -1,18 +1,29 @@
+from models.entities import PlayerEntity
 from models.hand import Hand
 from models.card import Card
 
 class Player:
     """ Represents a player in the Blackjack game. """
 
-    def __init__(self, name: str, initial_balance: float = 1000.0):
-        self.name = name
-        self.balance = initial_balance
-        self.current_bet = 0.0
+    def __init__(self, entity: PlayerEntity):
+        self.id = entity.id
+        self.name = entity.username
+        self.balance = entity.balance
 
         self.hands = [Hand()]
         self.bets = []
+        self.current_bet = 0.0
+
+    def to_entity(self) -> PlayerEntity:
+        """ Converts the Player object back to a PlayerEntity for database storage. """
+        return PlayerEntity(
+            id=self.id,
+            username=self.name,
+            balance=self.balance
+        )
 
     def set_current_bet(self, bet: float):
+        """ Sets the current bet for the player. This is used to keep track of the bet for the current round. """
         self.current_bet = bet
 
     def place_bet(self, amount: float) -> bool:
@@ -29,6 +40,7 @@ class Player:
         return True
     
     def can_double_down(self, hand_index: int = 0) -> bool:
+        """ Checks if the player can double down on their hand. The player can double down if they have exactly two cards in their hand and enough balance to place an additional bet equal to the original bet. """
         bet = self.bets[hand_index]
         hand = self.hands[hand_index]
         return bet > 0 and bet <= self.balance and len(hand.cards) == 2
@@ -42,6 +54,7 @@ class Player:
         self.bets[hand_index] *= 2
     
     def can_split(self, hand_index: int = 0) -> bool:
+        """ Checks if the player can split their hand. The player can split if they have two cards of the same value and enough balance to place an additional bet equal to the original bet. """
         hand = self.hands[hand_index]
         bet = self.bets[hand_index]
         if len(hand.cards) == 2 and hand.cards[0].value == hand.cards[1].value and bet <= self.balance:
@@ -49,6 +62,7 @@ class Player:
         return False
 
     def split_hand(self, hand_index: int = 0):
+        """ Splits the player's hand into two separate hands. The player must have two cards of the same value and enough balance to place an additional bet equal to the original bet. """
         if not self.can_split(hand_index):
             return 
         original_hand = self.hands[hand_index]

@@ -1,9 +1,11 @@
+from services.player_service import PlayerService
 from utils.blackjackgame import BlackJackGame
 
 
 class GameMenu:
-    def __init__(self):
+    def __init__(self, player_service: PlayerService):
         self.game = None
+        self.player_service = player_service
 
     def start(self):
         while True:
@@ -14,9 +16,12 @@ class GameMenu:
 
             if choice == '1':
                 name = input("Enter your name: ")
-                self.game = BlackJackGame()
-                self.game.set_player_name(name)
-                self.run_game_loop()
+                password = input("Enter your password: ")
+                player = self.check_login(name, password)
+                if player:
+                    self.game = BlackJackGame()
+                    self.game.set_player_name(player.name)
+                    self.run_game_loop()
             elif choice == '2':
                 print("Thanks for playing! Goodbye!")
                 break
@@ -47,3 +52,12 @@ class GameMenu:
                     break
                 else:
                     print("Invalid choice. Please enter Y or N.") 
+
+    def check_login(self, username: str, password: str):
+        player = self.player_service.login_player(username, password)
+        if player:
+            print(f"Welcome back, {player.name}!")
+            return player
+        else:
+            print("Invalid username or password. Please try again.")
+            return None
