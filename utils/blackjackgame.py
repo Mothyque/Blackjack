@@ -11,8 +11,8 @@ class BlackJackGame:
         self.change_bet = False
         self.insurnace_bet = 0.0
 
-    def set_player_name(self, name: str):
-        self.player = Player(name)
+    def set_player(self, player: Player):
+        self.player = player
 
     def set_change_bet(self, change: bool):
         self.change_bet = change

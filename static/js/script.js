@@ -1,12 +1,42 @@
+async function login(){
+    const user = document.getElementById('username').value;
+    const pass = document.getElementById('password').value;
+    const errorMsg = document.getElementById('loginErrorMessage');
+    const loginScreen = document.getElementById('loginScreen');
+    const gameBoard = document.getElementById('gameBoard');
+
+    try
+    {
+        const response = await fetch('/api/login',{
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ username: user, password: pass })
+        });
+
+        const data = await response.json();
+        if (response.ok)
+        {
+            loginScreen.style.display = 'none';
+            gameBoard.style.display = 'block';
+            startGame();
+        }
+        else
+        {
+            errorMsg.innerText = data.message;
+            errorMsg.style.display = 'block';
+            document.getElementById('username').value = user;
+            document.getElementById('password').value = '';
+        }
+    }
+    catch (error)
+    {
+        console.error('Error logging in:', error);
+    }
+}
+
 async function startGame() {
-    const name = document.getElementById('playerName').value;
-    const response = await fetch('/api/start_game', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({name : name })
-    });
+    const response = await fetch('/api/start_game', {method: 'POST'});
     const data = await response.json();
-    document.getElementById('setupArea').style.display = 'none';
     document.getElementById('gameBoard').style.display = 'block';
     
     updateUI(data.game_state);
@@ -43,25 +73,39 @@ function updateUI(state) {
     const btnHit = document.getElementById('btnHit');
     const btnStand = document.getElementById('btnStand');
     const btnPlayAgain = document.getElementById('btnPlayAgain');
+    const btnLogin = document.getElementById('btnLogin');
     const gameMessage = document.getElementById('gameMessage');
 
     if (state.round_active && !playerHand.is_busted)
     {
-        btnHit.style.display = 'inline-block';
+        if (playerHand.score == 21)
+        {
+            btnHit.style.display = 'none';
+            btnStand.style.display = 'none';
+            stand();
+        }
+        else
+        {
+            btnHit.style.display = 'inline-block';
+        }
         btnStand.style.display = 'inline-block';
         btnPlayAgain.style.display = 'none';
+        btnLogin.style.display = 'none';
         gameMessage.innerText = '';
     }
     else
     {
         btnHit.style.display = 'none';
         btnStand.style.display = 'none';
+        btnLogin.style.display = 'none';
         btnPlayAgain.style.display = 'inline-block';
         if (state.result_message) {
             gameMessage.innerText = state.result_message;
+            gameMessage.style.display = 'block';
         }
         else {
             gameMessage.innerText = "Bust! You lose.";
+            gameMessage.style.display = 'block';
         }
     }
 }

@@ -1,0 +1,13 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Run Blackjack",
+            "type": "python",
+            "request": "launch",
+            "program": "${workspaceFolder}/game_engine.py",
+            "cwd": "${workspaceFolder}", // ASTA E CHEIA
+            "console": "integratedTerminal"
+        }
+    ]
+}

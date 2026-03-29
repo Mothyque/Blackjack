@@ -20,7 +20,7 @@ class GameMenu:
                 player = self.check_login(name, password)
                 if player:
                     self.game = BlackJackGame()
-                    self.game.set_player_name(player.name)
+                    self.game.set_player(player)
                     self.run_game_loop()
             elif choice == '2':
                 print("Thanks for playing! Goodbye!")
@@ -46,6 +46,7 @@ class GameMenu:
                     break
                 elif play_again == 'n':
                     print("Thanks for playing! Goodbye!")
+                    self.player_service.save_player_state(self.game.player)
                     return
                 elif play_again == 'b':
                     self.game.set_change_bet(True)

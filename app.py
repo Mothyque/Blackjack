@@ -1,9 +1,19 @@
 from flask import Flask, jsonify, request, render_template
+from database.db_context import DatabaseContext
 from models.player import Player
 from models.dealer import Dealer
 from models.shoe import Shoe
+from repositories.player_repository import PlayerRepository
+from services.player_service import PlayerService
 
 app = Flask(__name__)
+app.secret_key = 'your_secret_key'
+
+db_context = DatabaseContext("sqlite:///blackjack.sqlite3")
+db_context.setup_database()
+session_db = db_context.get_session()
+repo = PlayerRepository(session_db)
+player_service = PlayerService(repo)
 
 current_game_state = {
     "player": None,
@@ -53,17 +63,33 @@ def get_game_json():
 def index():
     return render_template('index.html')
 
+@app.route('/api/login', methods=['POST'])
+def login():
+    data = request.json
+    username = data.get('username')
+    password = data.get('password')
+
+    player = player_service.login_player(username, password)
+    if player:
+        current_game_state["player"] = player
+        state = {
+            "username": player.name,
+            "balance": player.balance
+        }
+        return jsonify({"status": "success", "message": "Login successful", "player": state})
+    else:
+        return jsonify({"status": "error", "message": "Invalid username or password"}), 401
+
 @app.route('/api/start_game', methods=['POST'])
 def start_game():
-    data = request.json
-    name = data.get('name', 'Player') if data else 'Player'
+    p = current_game_state["player"]
+    if not p:
+        return jsonify({"error": "Please login first"}), 401
 
-    current_game_state["player"] = Player(name)
     current_game_state["dealer"] = Dealer()
     current_game_state["shoe"] = Shoe(6)
     current_game_state["round_active"] = True
 
-    p = current_game_state["player"]
     d = current_game_state["dealer"]
     s = current_game_state["shoe"]
 
@@ -78,6 +104,7 @@ def start_game():
 
     if bj_message:
         state["result_message"] = bj_message
+        player_service.save_player_state(p)
 
     return jsonify({"message": "Game started", "game_state": state})
 
@@ -97,6 +124,7 @@ def hit():
             current_game_state["round_active"] = False
             state = get_game_json()
             state["result_message"] = "Player busted! You lose."
+            player_service.save_player_state(player)
             return jsonify({"message": "Player busted!", "game_state": state})
         else:
             return jsonify({"message": "Hit successful", "game_state": get_game_json()})
@@ -130,7 +158,8 @@ def stand():
     else:
         p.push_bet()
         message = "It's a push!"
-    
+
+    player_service.save_player_state(p)
     state = get_game_json()
     state["result_message"] = message
     return jsonify({"message": message, "game_state": state})

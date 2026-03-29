@@ -1,0 +1,6 @@
+{
+    "code-runner.executorMap": {
+        "python": "cd $workspaceRoot && export PYTHONPATH=$workspaceRoot && python3 -u game_engine.py"
+    },
+    "code-runner.runInTerminal": true
+}
