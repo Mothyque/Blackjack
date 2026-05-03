@@ -9,18 +9,22 @@ class BlackJackGame:
         self.dealer = Dealer()
         self.shoe = Shoe(num_decks=6)
         self.change_bet = False
-        self.insurnace_bet = 0.0
+        self.insurance_bet = 0.0
 
     def set_player(self, player: Player):
+        """Set the player for the game."""
         self.player = player
 
     def set_change_bet(self, change: bool):
+        """Set the change bet flag."""
         self.change_bet = change
 
     def set_player_bet(self, bet: float):
+        """Set the player's current bet."""
         self.player.set_current_bet(bet)
 
     def play_round(self):
+        """Play a round of Blackjack."""
         print(f"{'-' * 30}")
         print("User: " + self.player.name)
         print(f"Balance: ${self.player.balance:.2f}" + "$")
@@ -44,6 +48,7 @@ class BlackJackGame:
         self._cleanup()
 
     def _handle_betting(self):
+        """Handle the betting process."""
         while True:
             try:
                 if self.player.current_bet <= 0 or self.change_bet:
@@ -61,17 +66,20 @@ class BlackJackGame:
                 print("Please enter a valid number.")
 
     def _check_and_reshuffle(self):
+        """Check if the shoe needs reshuffling."""
         if self.shoe.needs_reshuffle:
             print("Reshuffling the shoe...")
             self.shoe.build_and_shuffle()
 
     def _deal_initial_cards(self):
+        """Deal initial cards to the player and dealer."""
         self.player.receive_card(self.shoe.draw_card())
         self.dealer.receive_card(self.shoe.draw_card())
         self.player.receive_card(self.shoe.draw_card())
         self.dealer.receive_card(self.shoe.draw_card())
 
     def _display_hands(self, initial = False):
+        """Display the hands of the player and dealer."""
         if initial:
             print(f"\nDealer shows: {self.dealer.display_partial_hand()}")
         else:
@@ -80,33 +88,36 @@ class BlackJackGame:
         print(f"You have: {hand} - Score: {hand.display_score}") 
 
     def _handle_insurance(self):
+        """Handle the insurance betting process."""
         if self.dealer.upcard.rank != 'A':
             return
         print("Do you want to take insurance? (Y/N)")
         insurance_choice = input("> ").strip().lower()
         if insurance_choice == 'y':
-            self.insurnace_bet = self.player.bets[0] / 2
-            if self.insurnace_bet > self.player.balance:
+            self.insurance_bet = self.player.bets[0] / 2
+            if self.insurance_bet > self.player.balance:
                 print("You don't have enough balance for insurance bet.")
-                self.insurnace_bet = 0.0
+                self.insurance_bet = 0.0
             else:
-                self.player.balance -= self.insurnace_bet
-                print(f"Insurance bet of ${self.insurnace_bet:.2f} placed.")
+                self.player.balance -= self.insurance_bet
+                print(f"Insurance bet of ${self.insurance_bet:.2f} placed.")
         else:
             print("You chose not to take insurance.")
     
     def _resolve_insurance(self):
-        if self.insurnace_bet <= 0:
+        """Resolve the insurance bet."""
+        if self.insurance_bet <= 0:
             return
         dealer_bj = self.dealer.hand.score == 21
         if dealer_bj:
             print("Dealer has Blackjack! Insurance bet pays 2:1.")
-            self.player.balance += self.insurnace_bet * 3
+            self.player.balance += self.insurance_bet * 3
         else:
             print("Dealer does not have Blackjack. You lose the insurance bet.")
-        self.insurnace_bet = 0.0
+        self.insurance_bet = 0.0
 
     def _player_turn(self) -> bool:
+        """Handle the player's turn."""
         hand_index = 0
         all_busted = True
         while hand_index < len(self.player.hands):
@@ -162,6 +173,7 @@ class BlackJackGame:
         return not all_busted
     
     def _dealer_turn(self):
+        """Handle the dealer's turn."""
         print(f"\nDealer's turn.\nDealer has: {self.dealer.hand} - Score: {self.dealer.hand.score}")
 
         while self.dealer.should_hit:
@@ -170,6 +182,7 @@ class BlackJackGame:
             print(f"Dealer has: {self.dealer.hand} - Score: {self.dealer.hand.score}")
 
     def _resolve_winner(self):
+        """Resolve the winner of the round."""
         dealer_score = self.dealer.hand.score
         total_hands = len(self.player.hands)
         dealer_bj = dealer_score == 21 and len(self.dealer.hand.cards) == 2
@@ -204,4 +217,4 @@ class BlackJackGame:
         """ Cleans the hands at the end of the round. """
         self.player.clear_hand()
         self.dealer.clear_hand()
-        self.insurnace_bet = 0.0
+        self.insurance_bet = 0.0

@@ -16,7 +16,6 @@ def seed_initial_users(player_service):
     ]
 
     for data in test_users:
-        # Aici se producea eroarea dacă PlayerEntity nu era mapat
         if not repo.get_by_username(data["user"]):
             new_user = PlayerEntity(
                 username=data["user"],
@@ -39,6 +38,6 @@ if __name__ == "__main__":
         menu = GameMenu(service)
         menu.start()
     finally:
-        if menu.game.player:
+        if menu.game and hasattr(menu.game, 'player') and menu.game.player:
             service.save_player_state(menu.game.player)
         session.close()
