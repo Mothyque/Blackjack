@@ -16,11 +16,15 @@
                 <input type="text" id="username" placeholder="Username">
                 <input type="password" id="password" placeholder="Password">
                 <button class="btn-start" id="btnLogin" onclick="login()"> Login </button>
+                <button class="btn-action" id="btnExit" onclick="exitApp()"> Exit </button>
                 <p id="loginErrorMessage" style="color: red; display: none"> Wrong Password! Try again.</p>
             </div>
         </div>
 
         <div class="casino-table" id="gameBoard" style="display: none;">
+            <div style="text-align: right;">
+                <button class="btn-action" id="btnLogout" onclick="logout()"> Logout </button>
+            </div>
             <div>
                 <h2>Dealer</h2>
                 <h3 id="dealerScoreDisplay">Scor: ?</h3>

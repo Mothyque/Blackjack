@@ -126,3 +126,33 @@ function drawCards(containerId, cardsArray) {
         container.appendChild(cardElement);
     });
 }
+
+async function logout() {
+    try {
+        await fetch('/api/logout', { method: 'POST' });
+
+        document.getElementById('gameBoard').style.display = 'none';
+        document.getElementById('loginScreen').style.display = 'block';
+        document.getElementById('btnLogin').style.display = 'inline-block';
+
+        document.getElementById('username').value = '';
+        document.getElementById('password').value = '';
+        document.getElementById('loginErrorMessage').style.display = 'none';
+        
+        document.getElementById('gameMessage').innerText = '';
+        document.getElementById('playerCards').innerHTML = '';
+        document.getElementById('dealerCards').innerHTML = '';
+        document.getElementById('playerScore').innerText = 'Score: 0';
+        document.getElementById('dealerScoreDisplay').innerText = 'Score: ?';
+    }
+    catch (error) {
+        console.error('Error logging out:', error);
+    }
+}
+
+function exitApp() {
+    if (confirm("Are you sure you want to exit the game?")) {
+        window.close();
+    }
+}
+        

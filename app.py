@@ -79,6 +79,14 @@ def login():
         return jsonify({"status": "success", "message": "Login successful", "player": state})
     else:
         return jsonify({"status": "error", "message": "Invalid username or password"}), 401
+    
+@app.route('/api/logout', methods=['POST'])
+def logout():
+    current_game_state["player"] = None
+    current_game_state["dealer"] = None
+    current_game_state["shoe"] = None
+    current_game_state["round_active"] = False
+    return jsonify({"status": "success", "message": "Logged out successfully"})
 
 @app.route('/api/start_game', methods=['POST'])
 def start_game():

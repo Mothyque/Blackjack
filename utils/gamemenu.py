@@ -8,6 +8,7 @@ class GameMenu:
         self.player_service = player_service
 
     def start(self):
+        """Start the game menu."""
         while True:
             print("\n==== Welcome to Blackjack! ====")
             print("1. Start New Game")
@@ -29,6 +30,7 @@ class GameMenu:
                 print("Invalid choice. Please enter 1 or 2.")
 
     def run_game_loop(self):
+        """Run the main game loop."""
         while self.game.player.balance > 0:
             self.game.play_round()
 
@@ -55,6 +57,7 @@ class GameMenu:
                     print("Invalid choice. Please enter Y or N.") 
 
     def check_login(self, username: str, password: str):
+        """Check player login credentials."""
         player = self.player_service.login_player(username, password)
         if player:
             print(f"Welcome back, {player.name}!")
