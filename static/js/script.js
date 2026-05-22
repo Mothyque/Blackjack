@@ -72,6 +72,7 @@ function updateUI(state) {
 
     const btnHit = document.getElementById('btnHit');
     const btnStand = document.getElementById('btnStand');
+    const btnDouble = document.getElementById('btnDouble');
     const btnPlayAgain = document.getElementById('btnPlayAgain');
     const btnLogin = document.getElementById('btnLogin');
     const gameMessage = document.getElementById('gameMessage');
@@ -87,6 +88,12 @@ function updateUI(state) {
         else
         {
             btnHit.style.display = 'inline-block';
+            btnDouble.style.display = 'inline-block';
+            if (playerHand.can_double) {
+                btnDouble.style.display = 'inline-block';
+            } else {
+                btnDouble.style.display = 'none';
+            }
         }
         btnStand.style.display = 'inline-block';
         btnPlayAgain.style.display = 'none';
@@ -98,6 +105,7 @@ function updateUI(state) {
         btnHit.style.display = 'none';
         btnStand.style.display = 'none';
         btnLogin.style.display = 'none';
+        btnDouble.style.display = 'none';
         btnPlayAgain.style.display = 'inline-block';
         if (state.result_message) {
             gameMessage.innerText = state.result_message;
@@ -147,6 +155,16 @@ async function logout() {
     }
     catch (error) {
         console.error('Error logging out:', error);
+    }
+}
+
+async function doubleDown() {
+    const response = await fetch('/api/double_down', { method: 'POST' });
+    const data = await response.json();
+    if (response.ok) {
+        updateUI(data.game_state);
+    } else {
+        alert(data.error)
     }
 }
 
