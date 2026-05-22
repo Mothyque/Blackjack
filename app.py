@@ -20,6 +20,7 @@ current_game_state = {
     "dealer": None,
     "shoe": None,
     "round_active": False,
+    "active_hand_index": 0
 }
 
 def get_game_json():
@@ -28,13 +29,23 @@ def get_game_json():
     if not p or not d:
         return {"error" : "Game not started"}
     
+    round_active = current_game_state["round_active"]
+    active_idx = current_game_state["active_hand_index"]
+
     player_hands = []
     for i, hand in enumerate(p.hands):
+
+        if round_active and i == active_idx:
+            score_to_display = hand.display_score
+        else:
+            score_to_display = str(hand.score)
+
         player_hands.append({
             "cards": [str(card) for card in hand.cards],
-            "score": hand.display_score,
+            "score": score_to_display,
             "is_busted": hand.is_busted,
-            "can_double": p.can_double_down(i)
+            "can_double": p.can_double_down(i),
+            "can_split": p.can_split(i)
         })
 
     round_active = current_game_state["round_active"]
@@ -51,7 +62,8 @@ def get_game_json():
             "name": p.name,
             "balance": p.balance,
             "bets": p.bets,
-            "hands": player_hands
+            "hands": player_hands,
+            "active_hand_index": current_game_state["active_hand_index"]   
         },
         "dealer": {
             "cards": dealer_cards,
@@ -124,17 +136,13 @@ def hit():
     
     player = current_game_state["player"]
     shoe = current_game_state["shoe"]
-
-    hand = player.hands[0]
+    active_idx = current_game_state["active_hand_index"]
+    hand = player.hands[active_idx]
 
     if not hand.is_busted:
-        player.receive_card(shoe.draw_card(), 0)
+        player.receive_card(shoe.draw_card(), active_idx)
         if hand.is_busted:
-            current_game_state["round_active"] = False
-            state = get_game_json()
-            state["result_message"] = "Player busted! You lose."
-            player_service.save_player_state(player)
-            return jsonify({"message": "Player busted!", "game_state": state})
+            return advance_turn()
         else:
             return jsonify({"message": "Hit successful", "game_state": get_game_json()})
 
@@ -142,14 +150,8 @@ def hit():
 def stand():
     if not current_game_state["round_active"]:
         return jsonify({"error" : "No active round"}), 400
-    p = current_game_state["player"]
-    d = current_game_state["dealer"]
-    s = current_game_state["shoe"]
-
-    current_game_state["round_active"] = False
-    while d.should_hit:
-        d.receive_card(s.draw_card())
-    return round_output(p, d, player_service)
+    
+    return advance_turn()
 
 @app.route('/api/double_down', methods=['POST'])
 def double_down():
@@ -159,29 +161,15 @@ def double_down():
     p = current_game_state["player"]
     d = current_game_state["dealer"]
     s = current_game_state["shoe"]
+    active_idx = current_game_state["active_hand_index"]
 
-    if not p.can_double_down(0):
+    if not p.can_double_down(active_idx):
         return jsonify({"error": "Cannot double down"}), 400
     
-    p.double_down(0)
-    p.receive_card(s.draw_card(), 0)
+    p.double_down(active_idx)
+    p.receive_card(s.draw_card(), active_idx)
 
-    player_hand = p.hands[0]
-
-    if player_hand.is_busted:
-        current_game_state["round_active"] = False
-        message = "Player busted after doubling down! You lose."
-        p.lose_bet(0)
-        player_service.save_player_state(p)
-        state = get_game_json()
-        state["result_message"] = message
-        return jsonify({"message": message, "game_state": state})
-    
-    current_game_state["round_active"] = False
-    while d.should_hit:
-        d.receive_card(s.draw_card())
-
-    return round_output(p, d, player_service)
+    return advance_turn()
 
 @app.route('/api/play_again', methods=['POST'])
 def play_again():
@@ -208,6 +196,7 @@ def play_again():
     d.receive_card(s.draw_card())
 
     current_game_state["round_active"] = True
+    current_game_state["active_hand_index"] = 0
 
     bj_message = check_initial_blackjacks()
     state = get_game_json()
@@ -217,26 +206,72 @@ def play_again():
 
     return jsonify({"message": "New round started", "game_state": state})
 
-def round_output(player, dealer, playerService):
-    player_score = player.hands[0].score
-    dealer_score = dealer.hand.score
-    message = ""
-    if dealer_score > 21:
-        player.win_bet(0)
-        message = "Dealer busted! You win!"
-    elif player_score > dealer_score:
-        player.win_bet(0)
-        message = "You win!"
-    elif player_score < dealer_score:
-        player.lose_bet(0)
-        message = "You lose!"
+@app.route('/api/split', methods=['POST'])
+def split():
+    if not current_game_state["round_active"]:
+        return jsonify({"error": "No active round"}), 400
+    
+    p = current_game_state["player"]
+    s = current_game_state["shoe"]
+    active_idx = current_game_state["active_hand_index"]
+
+    if not p.can_split(active_idx):
+        return jsonify({"error": "Cannot split this hand"}), 400
+    
+    p.split_hand(active_idx)
+
+    p.receive_card(s.draw_card(), active_idx)
+    p.receive_card(s.draw_card(), len(p.hands) - 1)
+
+    return jsonify({"message": "Hand split successfully", "game_state": get_game_json()})
+
+
+def advance_turn():
+    p = current_game_state["player"]
+    d = current_game_state["dealer"]
+    s = current_game_state["shoe"]
+
+    if current_game_state["active_hand_index"] < len(p.hands) - 1:
+        current_game_state["active_hand_index"] += 1
+        return jsonify({"message": "Turn advanced to next hand", "game_state": get_game_json()})
     else:
-        player.push_bet(0)
-        message = "It's a push!"
-    playerService.save_player_state(player)
+        current_game_state["round_active"] = False
+
+        all_busted = all(hand.is_busted for hand in p.hands)
+        if not all_busted:
+            while d.should_hit:
+                d.receive_card(s.draw_card())
+        return round_output(p, d, player_service)
+
+def round_output(player, dealer, playerService):
+    dealer_score = dealer.hand.score
     state = get_game_json()
-    state["result_message"] = message
-    return jsonify({"message": message, "game_state": state})
+
+    for i, hand in enumerate(player.hands):
+        player_score = hand.score
+        message = ""
+
+        if hand.is_busted:
+            player.lose_bet(i)
+            message = "Hand busted! You lose!"
+        elif dealer_score > 21:
+            player.win_bet(i)
+            message = "Dealer busted! You win!"
+        elif player_score > dealer_score:
+            player.win_bet(i)
+            message = "You win!"
+        elif player_score < dealer_score:
+            player.lose_bet(i)
+            message = "You lose!"
+        else:
+            player.push_bet(i)
+            message = "It's a push!"
+
+        state["player"]["hands"][i]["result_message"] = message
+
+    playerService.save_player_state(player)
+    state["result_message"] = "Round over"
+    return jsonify({"message": "Round over", "game_state": state})
     
 def check_initial_blackjacks():
     p = current_game_state["player"]

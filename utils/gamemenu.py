@@ -1,3 +1,4 @@
+import getpass
 from services.player_service import PlayerService
 from utils.blackjackgame import BlackJackGame
 
@@ -17,7 +18,7 @@ class GameMenu:
 
             if choice == '1':
                 name = input("Enter your name: ")
-                password = input("Enter your password: ")
+                password = getpass.getpass("Enter your password: ")
                 player = self.check_login(name, password)
                 if player:
                     self.game = BlackJackGame()

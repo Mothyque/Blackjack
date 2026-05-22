@@ -35,6 +35,8 @@ if __name__ == "__main__":
 
         seed_initial_users(service)
 
+        service.set_player_balance(1, 5000.0)
+
         menu = GameMenu(service)
         menu.start()
     finally:

@@ -57,6 +57,7 @@ class Player:
         """ Checks if the player can split their hand. The player can split if they have two cards of the same value and enough balance to place an additional bet equal to the original bet. """
         hand = self.hands[hand_index]
         bet = self.bets[hand_index]
+        # if len(hand.cards) == 2 and hand.cards[0].value == hand.cards[1].value and hand.cards[0].rank == hand.cards[1].rank and bet <= self.balance:
         if len(hand.cards) == 2 and hand.cards[0].value == hand.cards[1].value and bet <= self.balance:
             return True
         return False

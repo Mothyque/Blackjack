@@ -1,3 +1,5 @@
+let lastKnownState = null;
+let displayHandIndex = 0;
 async function login(){
     const user = document.getElementById('username').value;
     const pass = document.getElementById('password').value;
@@ -61,9 +63,20 @@ async function playAgain() {
 }
 
 function updateUI(state) {
+
+    lastKnownState = state;
+    if (state.round_active) {
+        displayHandIndex = state.player.active_hand_index;
+    }
+
+    if (displayHandIndex >= state.player.hands.length) {
+        displayHandIndex = 0;
+    }
+
+    const playerHand = state.player.hands[displayHandIndex];
+
     document.getElementById('playerNameDisplay').innerText = state.player.name + ` (Balance: $${state.player.balance})`;
 
-    const playerHand = state.player.hands[0];
     drawCards('playerCards', playerHand.cards);
     document.getElementById('playerScore').innerText = 'Score: ' + playerHand.score;
 
@@ -73,32 +86,43 @@ function updateUI(state) {
     const btnHit = document.getElementById('btnHit');
     const btnStand = document.getElementById('btnStand');
     const btnDouble = document.getElementById('btnDouble');
+    const btnSplit = document.getElementById('btnSplit');
+    const btnPrevHand = document.getElementById('btnPrevHand');
+    const btnNextHand = document.getElementById('btnNextHand');
     const btnPlayAgain = document.getElementById('btnPlayAgain');
     const btnLogin = document.getElementById('btnLogin');
     const gameMessage = document.getElementById('gameMessage');
+    const handIndicator = document.getElementById('handIndicatorDisplay');
+
+    if (state.player.hands.length > 1) {
+        handIndicator.innerText = `Hand ${displayHandIndex + 1} of ${state.player.hands.length}`;
+        handIndicator.style.display = 'block';
+    } else {
+        handIndicator.style.display = 'none';
+    }
 
     if (state.round_active && !playerHand.is_busted)
     {
+        btnPrevHand.style.display = 'none';
+        btnNextHand.style.display = 'none';
+        btnPlayAgain.style.display = 'none';
+        gameMessage.innerText = '';
+
         if (playerHand.score == 21)
         {
             btnHit.style.display = 'none';
             btnStand.style.display = 'none';
+            btnDouble.style.display = 'none';
+            btnSplit.style.display = 'none';
             stand();
         }
         else
         {
             btnHit.style.display = 'inline-block';
-            btnDouble.style.display = 'inline-block';
-            if (playerHand.can_double) {
-                btnDouble.style.display = 'inline-block';
-            } else {
-                btnDouble.style.display = 'none';
-            }
+            btnStand.style.display = 'inline-block';
+            btnDouble.style.display = playerHand.can_double ? 'inline-block' : 'none';
+            btnSplit.style.display = playerHand.can_split ? 'inline-block' : 'none';
         }
-        btnStand.style.display = 'inline-block';
-        btnPlayAgain.style.display = 'none';
-        btnLogin.style.display = 'none';
-        gameMessage.innerText = '';
     }
     else
     {
@@ -106,15 +130,26 @@ function updateUI(state) {
         btnStand.style.display = 'none';
         btnLogin.style.display = 'none';
         btnDouble.style.display = 'none';
-        btnPlayAgain.style.display = 'inline-block';
-        if (state.result_message) {
-            gameMessage.innerText = state.result_message;
-            gameMessage.style.display = 'block';
+        btnSplit.style.display = 'none';
+        
+        if (!state.round_active) {
+            btnPlayAgain.style.display = 'inline-block';
+            btnPrevHand.style.display = displayHandIndex > 0 ? 'inline-block' : 'none';
+            btnNextHand.style.display = displayHandIndex < state.player.hands.length - 1 ? 'inline-block' : 'none';
+            
+            const finalMessage = playerHand.result_message ? playerHand.result_message : state.result_message;
+            gameMessage.innerText = finalMessage;
+
+            const msglower = finalMessage.toLowerCase();
+            if (msglower.includes('win')) {
+                gameMessage.style.color = "#006400";
+            } else if (msglower.includes('lose') || msglower.includes('busted')) {
+                gameMessage.style.color = "#ff0000";
+            } else {
+                gameMessage.style.color = "#f1c40f";
+            }
         }
-        else {
-            gameMessage.innerText = "Bust! You lose.";
-            gameMessage.style.display = 'block';
-        }
+        gameMessage.style.display = 'block';
     }
 }
 
@@ -165,6 +200,30 @@ async function doubleDown() {
         updateUI(data.game_state);
     } else {
         alert(data.error)
+    }
+}
+
+async function splitHand() {
+    const response = await fetch('/api/split', { method: 'POST' });
+    const data = await response.json();
+    if (response.ok) {
+        updateUI(data.game_state);
+    } else {
+        alert(data.error);
+    }
+}
+
+function prevHand() {
+    if (displayHandIndex > 0) {
+        displayHandIndex--;
+        updateUI(lastKnownState);
+    }
+}
+
+function nextHand() {
+    if (lastKnownState && displayHandIndex < lastKnownState.player.hands.length - 1) {
+        displayHandIndex++;
+        updateUI(lastKnownState);
     }
 }
 

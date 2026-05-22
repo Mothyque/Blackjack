@@ -20,3 +20,10 @@ class PlayerService:
         if entity:
             entity.balance = player.balance
             self.repository.save(entity)
+
+    def set_player_balance(self, id: int, balance: float):
+        """Set the balance of a player."""
+        player = self.repository.get_by_id(id)
+        if player:
+            player.balance = balance
+            self.repository.save(player)
