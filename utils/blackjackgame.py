@@ -3,7 +3,7 @@ from models.player import Player
 from models.shoe import Shoe
 
 
-class BlackJackGame:
+class BlackjackGame:
     def __init__(self):
         self.player = ""
         self.dealer = Dealer()

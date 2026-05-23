@@ -1,6 +1,6 @@
 import getpass
 from services.player_service import PlayerService
-from utils.blackjackgame import BlackJackGame
+from utils.blackjackgame import BlackjackGame
 
 
 class GameMenu:
@@ -21,7 +21,7 @@ class GameMenu:
                 password = getpass.getpass("Enter your password: ")
                 player = self.check_login(name, password)
                 if player:
-                    self.game = BlackJackGame()
+                    self.game = BlackjackGame()
                     self.game.set_player(player)
                     self.run_game_loop()
             elif choice == '2':
