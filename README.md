@@ -5,7 +5,8 @@ Acest proiect este o platformă completă de simulare pentru jocul de Blackjack,
 ## 🏛️ Arhitectura Sistemului
 Aplicația respectă cu strictețe principiile ingineriei software, fiind structurată pe trei niveluri arhitecturale izolate, modelate și rafinate complet în diagrame de structură și interacțiune UML:
 
-* **Presentation Layer:** * *Web:* Interfață Web receptivă realizată cu Flask, HTML5, CSS3 și JavaScript modern (AJAX prin API-uri REST/JSON).
+* **Presentation Layer:** 
+    * *Web:* Interfață Web receptivă realizată cu Flask, HTML5, CSS3 și JavaScript modern (AJAX prin API-uri REST/JSON).
     * *Console (CLI):* `GameMenu` pentru gestionarea stărilor text și a meniurilor de control inițiale.
 * **Business Logic / Domain Layer:** Motor de joc complex (`BlackJackGame`) care funcționează ca un Controller pentru entitățile de domeniu (`Player`, `Dealer`, `Hand`, `Shoe`, `Card`) și gestionează regulile stricte de cazinou. Comunicarea cu datele se face prin intermediul `PlayerService`.
 * **Data Access Layer (ORM):** Strat de persistență izolat prin `PlayerRepository`, care mapează obiectele de domeniu pe tabelele SQL prin intermediul SQLAlchemy (ORM) și o bază de date SQLite.
@@ -36,6 +37,6 @@ Pentru verificarea corectitudinii matematice și a fluxurilor arhitecturale, pro
     * `test_player.py`: Testarea tranzacțiilor financiare (pariuri invalide, fonduri insuficiente) și fragmentarea mâinilor la split.
     * `test_game_mechanics.py`: Testarea completă a interacțiunilor complexe din motorul de joc (Double Down, tura dealerului, distribuirea inițială și acordarea plăților).
 
-Rularea suitei de teste din radacină:
+Rularea testelor din radacină:
 ```bash
 python -m unittest discover tests
