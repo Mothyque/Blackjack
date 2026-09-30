@@ -32,6 +32,12 @@ class Hand:
         is_soft = aces_as_11 > 0
 
         return total, is_soft
+
+    @property
+    def is_soft(self) -> bool:
+        """ Returns True if the hand is soft (contains an Ace counted as 11). """
+        _, is_soft = self.get_score_details()
+        return is_soft
     
     @property
     def score(self) -> int:
